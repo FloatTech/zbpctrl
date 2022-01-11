@@ -1,7 +1,7 @@
 github.com/FloatTech/bot-manager v1.0.0 h1:d63J5htLhVBc2ITG09WBJI+qAB0ubPjYhfXl6hljBNk=
 github.com/FloatTech/bot-manager v1.0.0/go.mod h1:8YYRJ16oroGHQGD2En0oVnmcKJkxR9O/jd5BPSfWfOQ=
-github.com/FloatTech/zbputils v1.2.3-add1 h1:gzLw4aa7HhVB7cRUIcJUdFoM/fqxy6yEOXwtt5nw+40=
-github.com/FloatTech/zbputils v1.2.3-add1/go.mod h1:+NZ6tqt9lR2ilyiIh/+90tZlSW2pXx0IyOFlpOiqadE=
+github.com/FloatTech/zbputils v1.2.3-add2 h1:b+W7+cWriDVcUXh6NLnQ/z6hkrY+FvrJuoAowsUaFrQ=
+github.com/FloatTech/zbputils v1.2.3-add2/go.mod h1:OXX382tuGcev9XfWG9aYE+OmbvEKGCXfuM+ZmW9BTLw=
 github.com/Mrs4s/MiraiGo v0.0.0-20211120033824-43b23f4e6fcb h1:Rkj28fqIwGx/EgBzRYtpmJRfH6wqVn7cNdc7aJ0QE4M=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
