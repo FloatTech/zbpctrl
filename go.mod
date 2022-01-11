@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/FloatTech/bot-manager v1.0.0
-	github.com/FloatTech/zbputils v1.2.3
+	github.com/FloatTech/zbputils v1.2.3-add1
 	github.com/fumiama/go-base16384 v1.2.1
 	github.com/gin-gonic/gin v1.7.7
 	github.com/gorilla/websocket v1.4.2
