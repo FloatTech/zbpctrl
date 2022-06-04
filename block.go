@@ -5,7 +5,7 @@ import (
 )
 
 func (manager *Manager[CTX]) InitBlock() error {
-	return manager.D.Create("__block", &block{})
+	return manager.D.Create("__block", &BlockStatus{})
 }
 
 var blockCache = make(map[int64]bool)
@@ -14,7 +14,7 @@ func (manager *Manager[CTX]) DoBlock(uid int64) error {
 	manager.Lock()
 	defer manager.Unlock()
 	blockCache[uid] = true
-	return manager.D.Insert("__block", &block{UserID: uid})
+	return manager.D.Insert("__block", &BlockStatus{UserID: uid})
 }
 
 func (manager *Manager[CTX]) DoUnblock(uid int64) error {

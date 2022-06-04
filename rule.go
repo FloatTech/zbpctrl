@@ -40,8 +40,8 @@ type Control[CTX any] struct {
 }
 
 // newctrl returns Manager with settings.
-func (manager *Manager[CTX]) newctrl(service string, o *Options[CTX]) *Control[CTX] {
-	var c grpcfg
+func (manager *Manager[CTX]) NewControl(service string, o *Options[CTX]) *Control[CTX] {
+	var c GroupConfig
 	m := &Control[CTX]{
 		Service: service,
 		Cache:   make(map[int64]bool, 16),
@@ -60,7 +60,7 @@ func (manager *Manager[CTX]) newctrl(service string, o *Options[CTX]) *Control[C
 	if err != nil {
 		panic(err)
 	}
-	err = manager.D.Create(service+"ban", &ban{})
+	err = manager.D.Create(service+"ban", &BanStatus{})
 	if err != nil {
 		panic(err)
 	}
@@ -76,7 +76,7 @@ func (manager *Manager[CTX]) newctrl(service string, o *Options[CTX]) *Control[C
 // Enable enables a group to pass the Manager.
 // groupID == 0 (ALL) will operate on all grps.
 func (m *Control[CTX]) Enable(groupID int64) {
-	var c grpcfg
+	var c GroupConfig
 	m.Manager.RLock()
 	err := m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(groupID, 10))
 	m.Manager.RUnlock()
@@ -96,7 +96,7 @@ func (m *Control[CTX]) Enable(groupID int64) {
 // Disable disables a group to pass the Manager.
 // groupID == 0 (ALL) will operate on all grps.
 func (m *Control[CTX]) Disable(groupID int64) {
-	var c grpcfg
+	var c GroupConfig
 	m.Manager.RLock()
 	err := m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(groupID, 10))
 	m.Manager.RUnlock()
@@ -131,7 +131,7 @@ func (m *Control[CTX]) Reset(groupID int64) {
 // 当全局未配置或与默认相同时, 状态取决于单独配置, 后备为默认配置；
 // 当全局与默认不同时, 状态取决于全局配置, 单独配置失效。
 func (m *Control[CTX]) IsEnabledIn(gid int64) bool {
-	var c grpcfg
+	var c GroupConfig
 	var err error
 
 	m.Manager.RLock()
@@ -189,7 +189,7 @@ func (m *Control[CTX]) Ban(uid, gid int64) {
 	if gid != 0 { // 特定群
 		digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_%d", uid, gid)))
 		m.Manager.RLock()
-		err = m.Manager.D.Insert(m.Service+"ban", &ban{ID: int64(binary.LittleEndian.Uint64(digest[:8])), UserID: uid, GroupID: gid})
+		err = m.Manager.D.Insert(m.Service+"ban", &BanStatus{ID: int64(binary.LittleEndian.Uint64(digest[:8])), UserID: uid, GroupID: gid})
 		m.Manager.RUnlock()
 		if err == nil {
 			log.Debugf("[control] plugin %s is banned in grp %d for usr %d.", m.Service, gid, uid)
@@ -199,7 +199,7 @@ func (m *Control[CTX]) Ban(uid, gid int64) {
 	// 所有群
 	digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_all", uid)))
 	m.Manager.RLock()
-	err = m.Manager.D.Insert(m.Service+"ban", &ban{ID: int64(binary.LittleEndian.Uint64(digest[:8])), UserID: uid, GroupID: 0})
+	err = m.Manager.D.Insert(m.Service+"ban", &BanStatus{ID: int64(binary.LittleEndian.Uint64(digest[:8])), UserID: uid, GroupID: 0})
 	m.Manager.RUnlock()
 	if err == nil {
 		log.Debugf("[control] plugin %s is banned in all grp for usr %d.", m.Service, uid)
@@ -227,7 +227,7 @@ func (m *Control[CTX]) Permit(uid, gid int64) {
 
 // IsBannedIn 某人是否在某群被 ban
 func (m *Control[CTX]) IsBannedIn(uid, gid int64) bool {
-	var b ban
+	var b BanStatus
 	var err error
 	var digest [16]byte
 	if gid != 0 {
@@ -253,7 +253,7 @@ func (m *Control[CTX]) IsBannedIn(uid, gid int64) bool {
 
 // GetData 获取某个群的 62 位配置信息
 func (m *Control[CTX]) GetData(gid int64) int64 {
-	var c grpcfg
+	var c GroupConfig
 	var err error
 	m.Manager.RLock()
 	err = m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(gid, 10))
@@ -267,7 +267,7 @@ func (m *Control[CTX]) GetData(gid int64) int64 {
 
 // SetData 为某个群设置低 62 位配置数据
 func (m *Control[CTX]) SetData(groupID int64, data int64) error {
-	var c grpcfg
+	var c GroupConfig
 	m.Manager.RLock()
 	err := m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(groupID, 10))
 	m.Manager.RUnlock()
@@ -293,7 +293,7 @@ func (m *Control[CTX]) SetData(groupID int64, data int64) error {
 
 // Flip 改变全局默认启用状态
 func (m *Control[CTX]) Flip() error {
-	var c grpcfg
+	var c GroupConfig
 	m.Manager.Lock()
 	defer m.Manager.Unlock()
 	m.Options.DisableOnDefault = !m.Options.DisableOnDefault
