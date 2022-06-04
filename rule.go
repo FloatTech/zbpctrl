@@ -19,55 +19,55 @@ import (
 
 type Manager[CTX any] struct {
 	sync.RWMutex
-	m         map[string]*Control[CTX]
-	db        sql.Sqlite
-	ctxbanmap *ttl.Cache[uintptr, bool]
+	M map[string]*Control[CTX]
+	D sql.Sqlite
+	B *ttl.Cache[uintptr, bool]
 }
 
 func NewManager[CTX any](dbpath string, banmapttl time.Duration) Manager[CTX] {
 	return Manager[CTX]{
-		db:        sql.Sqlite{DBPath: dbpath},
-		ctxbanmap: ttl.NewCache[uintptr, bool](banmapttl),
+		D: sql.Sqlite{DBPath: dbpath},
+		B: ttl.NewCache[uintptr, bool](banmapttl),
 	}
 }
 
 // Control is to control the plugins.
 type Control[CTX any] struct {
-	service string
-	cache   map[int64]bool
-	options Options[CTX]
-	manager *Manager[CTX]
+	Service string
+	Cache   map[int64]bool
+	Options Options[CTX]
+	Manager *Manager[CTX]
 }
 
 // newctrl returns Manager with settings.
 func (manager *Manager[CTX]) newctrl(service string, o *Options[CTX]) *Control[CTX] {
 	var c grpcfg
 	m := &Control[CTX]{
-		service: service,
-		cache:   make(map[int64]bool, 16),
-		options: func() Options[CTX] {
+		Service: service,
+		Cache:   make(map[int64]bool, 16),
+		Options: func() Options[CTX] {
 			if o == nil {
 				return Options[CTX]{}
 			}
 			return *o
 		}(),
-		manager: manager,
+		Manager: manager,
 	}
 	manager.Lock()
 	defer manager.Unlock()
-	manager.m[service] = m
-	err := manager.db.Create(service, &c)
+	manager.M[service] = m
+	err := manager.D.Create(service, &c)
 	if err != nil {
 		panic(err)
 	}
-	err = manager.db.Create(service+"ban", &ban{})
+	err = manager.D.Create(service+"ban", &ban{})
 	if err != nil {
 		panic(err)
 	}
-	err = manager.db.Find(m.service, &c, "WHERE gid=0")
+	err = manager.D.Find(m.Service, &c, "WHERE gid=0")
 	if err == nil {
 		if bits.RotateLeft64(uint64(c.Disable), 1)&1 == 1 {
-			m.options.DisableOnDefault = !m.options.DisableOnDefault
+			m.Options.DisableOnDefault = !m.Options.DisableOnDefault
 		}
 	}
 	return m
@@ -77,17 +77,17 @@ func (manager *Manager[CTX]) newctrl(service string, o *Options[CTX]) *Control[C
 // groupID == 0 (ALL) will operate on all grps.
 func (m *Control[CTX]) Enable(groupID int64) {
 	var c grpcfg
-	m.manager.RLock()
-	err := m.manager.db.Find(m.service, &c, "WHERE gid="+strconv.FormatInt(groupID, 10))
-	m.manager.RUnlock()
+	m.Manager.RLock()
+	err := m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(groupID, 10))
+	m.Manager.RUnlock()
 	if err != nil {
 		c.GroupID = groupID
 	}
 	c.Disable = int64(uint64(c.Disable) & 0xffffffff_fffffffe)
-	m.manager.Lock()
-	m.cache[groupID] = true
-	err = m.manager.db.Insert(m.service, &c)
-	m.manager.Unlock()
+	m.Manager.Lock()
+	m.Cache[groupID] = true
+	err = m.Manager.D.Insert(m.Service, &c)
+	m.Manager.Unlock()
 	if err != nil {
 		log.Errorf("[control] %v", err)
 	}
@@ -97,17 +97,17 @@ func (m *Control[CTX]) Enable(groupID int64) {
 // groupID == 0 (ALL) will operate on all grps.
 func (m *Control[CTX]) Disable(groupID int64) {
 	var c grpcfg
-	m.manager.RLock()
-	err := m.manager.db.Find(m.service, &c, "WHERE gid="+strconv.FormatInt(groupID, 10))
-	m.manager.RUnlock()
+	m.Manager.RLock()
+	err := m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(groupID, 10))
+	m.Manager.RUnlock()
 	if err != nil {
 		c.GroupID = groupID
 	}
 	c.Disable |= 1
-	m.manager.Lock()
-	m.cache[groupID] = false
-	err = m.manager.db.Insert(m.service, &c)
-	m.manager.Unlock()
+	m.Manager.Lock()
+	m.Cache[groupID] = false
+	err = m.Manager.D.Insert(m.Service, &c)
+	m.Manager.Unlock()
 	if err != nil {
 		log.Errorf("[control] %v", err)
 	}
@@ -117,10 +117,10 @@ func (m *Control[CTX]) Disable(groupID int64) {
 // groupID == 0 (ALL) is not allowed.
 func (m *Control[CTX]) Reset(groupID int64) {
 	if groupID != 0 {
-		m.manager.Lock()
-		delete(m.cache, groupID)
-		err := m.manager.db.Del(m.service, "WHERE gid="+strconv.FormatInt(groupID, 10))
-		m.manager.Unlock()
+		m.Manager.Lock()
+		delete(m.Cache, groupID)
+		err := m.Manager.D.Del(m.Service, "WHERE gid="+strconv.FormatInt(groupID, 10))
+		m.Manager.Unlock()
 		if err != nil {
 			log.Errorf("[control] %v", err)
 		}
@@ -134,52 +134,52 @@ func (m *Control[CTX]) IsEnabledIn(gid int64) bool {
 	var c grpcfg
 	var err error
 
-	m.manager.RLock()
-	yes, ok := m.cache[0]
-	m.manager.RUnlock()
+	m.Manager.RLock()
+	yes, ok := m.Cache[0]
+	m.Manager.RUnlock()
 	if !ok {
-		m.manager.RLock()
-		err = m.manager.db.Find(m.service, &c, "WHERE gid=0")
-		m.manager.RUnlock()
+		m.Manager.RLock()
+		err = m.Manager.D.Find(m.Service, &c, "WHERE gid=0")
+		m.Manager.RUnlock()
 		if err == nil && c.GroupID == 0 {
-			log.Debugf("[control] plugin %s of all : %d", m.service, c.Disable&1)
+			log.Debugf("[control] plugin %s of all : %d", m.Service, c.Disable&1)
 			yes = c.Disable&1 == 0
 			ok = true
-			m.manager.Lock()
-			m.cache[0] = yes
-			m.manager.Unlock()
-			log.Debugf("[control] cache plugin %s of grp %d : %v", m.service, gid, yes)
+			m.Manager.Lock()
+			m.Cache[0] = yes
+			m.Manager.Unlock()
+			log.Debugf("[control] cache plugin %s of grp %d : %v", m.Service, gid, yes)
 		}
 	}
 
-	if ok && yes == m.options.DisableOnDefault { // global enable status is different from default value
+	if ok && yes == m.Options.DisableOnDefault { // global enable status is different from default value
 		return yes
 	}
 
-	m.manager.RLock()
-	yes, ok = m.cache[gid]
-	m.manager.RUnlock()
+	m.Manager.RLock()
+	yes, ok = m.Cache[gid]
+	m.Manager.RUnlock()
 	if ok {
-		log.Debugf("[control] read cached %s of grp %d : %v", m.service, gid, yes)
+		log.Debugf("[control] read cached %s of grp %d : %v", m.Service, gid, yes)
 	} else {
-		m.manager.RLock()
-		err = m.manager.db.Find(m.service, &c, "WHERE gid="+strconv.FormatInt(gid, 10))
-		m.manager.RUnlock()
+		m.Manager.RLock()
+		err = m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(gid, 10))
+		m.Manager.RUnlock()
 		if err == nil && gid == c.GroupID {
-			log.Debugf("[control] plugin %s of grp %d : %d", m.service, c.GroupID, c.Disable&1)
+			log.Debugf("[control] plugin %s of grp %d : %d", m.Service, c.GroupID, c.Disable&1)
 			yes = c.Disable&1 == 0
 			ok = true
-			m.manager.Lock()
-			m.cache[gid] = yes
-			m.manager.Unlock()
-			log.Debugf("[control] cache plugin %s of grp %d : %v", m.service, gid, yes)
+			m.Manager.Lock()
+			m.Cache[gid] = yes
+			m.Manager.Unlock()
+			log.Debugf("[control] cache plugin %s of grp %d : %v", m.Service, gid, yes)
 		}
 	}
 
 	if ok {
 		return yes
 	}
-	return !m.options.DisableOnDefault
+	return !m.Options.DisableOnDefault
 }
 
 // Ban 禁止某人在某群使用本插件
@@ -188,21 +188,21 @@ func (m *Control[CTX]) Ban(uid, gid int64) {
 	var digest [16]byte
 	if gid != 0 { // 特定群
 		digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_%d", uid, gid)))
-		m.manager.RLock()
-		err = m.manager.db.Insert(m.service+"ban", &ban{ID: int64(binary.LittleEndian.Uint64(digest[:8])), UserID: uid, GroupID: gid})
-		m.manager.RUnlock()
+		m.Manager.RLock()
+		err = m.Manager.D.Insert(m.Service+"ban", &ban{ID: int64(binary.LittleEndian.Uint64(digest[:8])), UserID: uid, GroupID: gid})
+		m.Manager.RUnlock()
 		if err == nil {
-			log.Debugf("[control] plugin %s is banned in grp %d for usr %d.", m.service, gid, uid)
+			log.Debugf("[control] plugin %s is banned in grp %d for usr %d.", m.Service, gid, uid)
 			return
 		}
 	}
 	// 所有群
 	digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_all", uid)))
-	m.manager.RLock()
-	err = m.manager.db.Insert(m.service+"ban", &ban{ID: int64(binary.LittleEndian.Uint64(digest[:8])), UserID: uid, GroupID: 0})
-	m.manager.RUnlock()
+	m.Manager.RLock()
+	err = m.Manager.D.Insert(m.Service+"ban", &ban{ID: int64(binary.LittleEndian.Uint64(digest[:8])), UserID: uid, GroupID: 0})
+	m.Manager.RUnlock()
 	if err == nil {
-		log.Debugf("[control] plugin %s is banned in all grp for usr %d.", m.service, uid)
+		log.Debugf("[control] plugin %s is banned in all grp for usr %d.", m.Service, uid)
 	}
 }
 
@@ -211,18 +211,18 @@ func (m *Control[CTX]) Permit(uid, gid int64) {
 	var digest [16]byte
 	if gid != 0 { // 特定群
 		digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_%d", uid, gid)))
-		m.manager.RLock()
-		_ = m.manager.db.Del(m.service+"ban", "WHERE id = "+strconv.FormatInt(int64(binary.LittleEndian.Uint64(digest[:8])), 10))
-		m.manager.RUnlock()
-		log.Debugf("[control] plugin %s is permitted in grp %d for usr %d.", m.service, gid, uid)
+		m.Manager.RLock()
+		_ = m.Manager.D.Del(m.Service+"ban", "WHERE id = "+strconv.FormatInt(int64(binary.LittleEndian.Uint64(digest[:8])), 10))
+		m.Manager.RUnlock()
+		log.Debugf("[control] plugin %s is permitted in grp %d for usr %d.", m.Service, gid, uid)
 		return
 	}
 	// 所有群
 	digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_all", uid)))
-	m.manager.RLock()
-	_ = m.manager.db.Del(m.service+"ban", "WHERE id = "+strconv.FormatInt(int64(binary.LittleEndian.Uint64(digest[:8])), 10))
-	m.manager.RUnlock()
-	log.Debugf("[control] plugin %s is permitted in all grp for usr %d.", m.service, uid)
+	m.Manager.RLock()
+	_ = m.Manager.D.Del(m.Service+"ban", "WHERE id = "+strconv.FormatInt(int64(binary.LittleEndian.Uint64(digest[:8])), 10))
+	m.Manager.RUnlock()
+	log.Debugf("[control] plugin %s is permitted in all grp for usr %d.", m.Service, uid)
 }
 
 // IsBannedIn 某人是否在某群被 ban
@@ -232,20 +232,20 @@ func (m *Control[CTX]) IsBannedIn(uid, gid int64) bool {
 	var digest [16]byte
 	if gid != 0 {
 		digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_%d", uid, gid)))
-		m.manager.RLock()
-		err = m.manager.db.Find(m.service+"ban", &b, "WHERE id = "+strconv.FormatInt(int64(binary.LittleEndian.Uint64(digest[:8])), 10))
-		m.manager.RUnlock()
+		m.Manager.RLock()
+		err = m.Manager.D.Find(m.Service+"ban", &b, "WHERE id = "+strconv.FormatInt(int64(binary.LittleEndian.Uint64(digest[:8])), 10))
+		m.Manager.RUnlock()
 		if err == nil && gid == b.GroupID && uid == b.UserID {
-			log.Debugf("[control] plugin %s is banned in grp %d for usr %d.", m.service, b.GroupID, b.UserID)
+			log.Debugf("[control] plugin %s is banned in grp %d for usr %d.", m.Service, b.GroupID, b.UserID)
 			return true
 		}
 	}
 	digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_all", uid)))
-	m.manager.RLock()
-	err = m.manager.db.Find(m.service+"ban", &b, "WHERE id = "+strconv.FormatInt(int64(binary.LittleEndian.Uint64(digest[:8])), 10))
-	m.manager.RUnlock()
+	m.Manager.RLock()
+	err = m.Manager.D.Find(m.Service+"ban", &b, "WHERE id = "+strconv.FormatInt(int64(binary.LittleEndian.Uint64(digest[:8])), 10))
+	m.Manager.RUnlock()
 	if err == nil && b.GroupID == 0 && uid == b.UserID {
-		log.Debugf("[control] plugin %s is banned in all grp for usr %d.", m.service, b.UserID)
+		log.Debugf("[control] plugin %s is banned in all grp for usr %d.", m.Service, b.UserID)
 		return true
 	}
 	return false
@@ -255,11 +255,11 @@ func (m *Control[CTX]) IsBannedIn(uid, gid int64) bool {
 func (m *Control[CTX]) GetData(gid int64) int64 {
 	var c grpcfg
 	var err error
-	m.manager.RLock()
-	err = m.manager.db.Find(m.service, &c, "WHERE gid="+strconv.FormatInt(gid, 10))
-	m.manager.RUnlock()
+	m.Manager.RLock()
+	err = m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(gid, 10))
+	m.Manager.RUnlock()
 	if err == nil && gid == c.GroupID {
-		log.Debugf("[control] plugin %s of grp %d : 0x%x", m.service, c.GroupID, c.Disable>>1)
+		log.Debugf("[control] plugin %s of grp %d : 0x%x", m.Service, c.GroupID, c.Disable>>1)
 		return (c.Disable >> 1) & 0x3fffffff_ffffffff
 	}
 	return 0
@@ -268,12 +268,12 @@ func (m *Control[CTX]) GetData(gid int64) int64 {
 // SetData 为某个群设置低 62 位配置数据
 func (m *Control[CTX]) SetData(groupID int64, data int64) error {
 	var c grpcfg
-	m.manager.RLock()
-	err := m.manager.db.Find(m.service, &c, "WHERE gid="+strconv.FormatInt(groupID, 10))
-	m.manager.RUnlock()
+	m.Manager.RLock()
+	err := m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(groupID, 10))
+	m.Manager.RUnlock()
 	if err != nil {
 		c.GroupID = groupID
-		if m.options.DisableOnDefault {
+		if m.Options.DisableOnDefault {
 			c.Disable = 1
 		}
 	}
@@ -281,10 +281,10 @@ func (m *Control[CTX]) SetData(groupID int64, data int64) error {
 	x &= 0x03
 	x |= uint64(data) << 2
 	c.Disable = int64(bits.RotateLeft64(x, -1))
-	log.Debugf("[control] set plugin %s of grp %d : 0x%x", m.service, c.GroupID, data)
-	m.manager.Lock()
-	err = m.manager.db.Insert(m.service, &c)
-	m.manager.Unlock()
+	log.Debugf("[control] set plugin %s of grp %d : 0x%x", m.Service, c.GroupID, data)
+	m.Manager.Lock()
+	err = m.Manager.D.Insert(m.Service, &c)
+	m.Manager.Unlock()
 	if err != nil {
 		log.Errorf("[control] %v", err)
 	}
@@ -294,17 +294,17 @@ func (m *Control[CTX]) SetData(groupID int64, data int64) error {
 // Flip 改变全局默认启用状态
 func (m *Control[CTX]) Flip() error {
 	var c grpcfg
-	m.manager.Lock()
-	defer m.manager.Unlock()
-	m.options.DisableOnDefault = !m.options.DisableOnDefault
-	err := m.manager.db.Find(m.service, &c, "WHERE gid=0")
-	if err != nil && m.options.DisableOnDefault {
+	m.Manager.Lock()
+	defer m.Manager.Unlock()
+	m.Options.DisableOnDefault = !m.Options.DisableOnDefault
+	err := m.Manager.D.Find(m.Service, &c, "WHERE gid=0")
+	if err != nil && m.Options.DisableOnDefault {
 		c.Disable = 1
 	}
 	x := bits.RotateLeft64(uint64(c.Disable), 1) &^ 1
 	c.Disable = int64(bits.RotateLeft64(x, -1))
-	log.Debugf("[control] flip plugin %s of all : %d", m.service, c.GroupID, x&1)
-	err = m.manager.db.Insert(m.service, &c)
+	log.Debugf("[control] flip plugin %s of all : %d", m.Service, c.GroupID, x&1)
+	err = m.Manager.D.Insert(m.Service, &c)
 	if err != nil {
 		log.Errorf("[control] %v", err)
 	}
@@ -318,13 +318,13 @@ func (m *Control[CTX]) Handler(ctx uintptr, gid, uid int64) bool {
 		// 个人用户
 		grp = -uid
 	}
-	ok := m.manager.ctxbanmap.Get(ctx)
+	ok := m.Manager.B.Get(ctx)
 	if ok {
 		return m.IsEnabledIn(grp)
 	}
 	isnotbanned := !m.IsBannedIn(uid, grp)
 	if isnotbanned {
-		m.manager.ctxbanmap.Set(ctx, true)
+		m.Manager.B.Set(ctx, true)
 		return m.IsEnabledIn(grp)
 	}
 	return false
@@ -332,7 +332,7 @@ func (m *Control[CTX]) Handler(ctx uintptr, gid, uid int64) bool {
 
 // String 打印帮助
 func (m *Control[CTX]) String() string {
-	return m.options.Help
+	return m.Options.Help
 }
 
 // EnableMark 启用：●，禁用：○
@@ -355,7 +355,7 @@ func (m *Control[CTX]) EnableMarkIn(grp int64) EnableMark {
 // not exist, it will return nil.
 func (manager *Manager[CTX]) Lookup(service string) (*Control[CTX], bool) {
 	manager.RLock()
-	m, ok := manager.m[service]
+	m, ok := manager.M[service]
 	manager.RUnlock()
 	return m, ok
 }
@@ -363,7 +363,7 @@ func (manager *Manager[CTX]) Lookup(service string) (*Control[CTX], bool) {
 // ForEach iterates through managers.
 func (manager *Manager[CTX]) ForEach(iterator func(key string, manager *Control[CTX]) bool) {
 	manager.RLock()
-	m := copyMap(manager.m)
+	m := copyMap(manager.M)
 	manager.RUnlock()
 	for k, v := range m {
 		if !iterator(k, v) {
