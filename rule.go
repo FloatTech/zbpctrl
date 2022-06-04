@@ -26,6 +26,7 @@ type Manager[CTX any] struct {
 
 func NewManager[CTX any](dbpath string, banmapttl time.Duration) Manager[CTX] {
 	return Manager[CTX]{
+		M: map[string]*Control[CTX]{},
 		D: sql.Sqlite{DBPath: dbpath},
 		B: ttl.NewCache[uintptr, bool](banmapttl),
 	}
