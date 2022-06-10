@@ -57,7 +57,11 @@ func (manager *Manager[CTX]) NewControl(service string, o *Options[CTX]) *Contro
 	manager.Lock()
 	defer manager.Unlock()
 	manager.M[service] = m
-	err := manager.D.Create(service, &c)
+	err := manager.D.Open(time.Hour * 24)
+	if err != nil {
+		panic(err)
+	}
+	err = manager.D.Create(service, &c)
 	if err != nil {
 		panic(err)
 	}
@@ -364,7 +368,7 @@ func (manager *Manager[CTX]) Lookup(service string) (*Control[CTX], bool) {
 // ForEach iterates through managers.
 func (manager *Manager[CTX]) ForEach(iterator func(key string, manager *Control[CTX]) bool) {
 	manager.RLock()
-	m := copyMap(manager.M)
+	m := cpmp(manager.M)
 	manager.RUnlock()
 	for k, v := range m {
 		if !iterator(k, v) {
@@ -373,7 +377,7 @@ func (manager *Manager[CTX]) ForEach(iterator func(key string, manager *Control[
 	}
 }
 
-func copyMap[CTX any](m map[string]*Control[CTX]) map[string]*Control[CTX] {
+func cpmp[CTX any](m map[string]*Control[CTX]) map[string]*Control[CTX] {
 	ret := make(map[string]*Control[CTX], len(m))
 	for k, v := range m {
 		ret[k] = v
