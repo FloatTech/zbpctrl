@@ -24,12 +24,17 @@ type Manager[CTX any] struct {
 	B *ttl.Cache[uintptr, bool]
 }
 
-func NewManager[CTX any](dbpath string, banmapttl time.Duration) Manager[CTX] {
-	return Manager[CTX]{
+func NewManager[CTX any](dbpath string, banmapttl time.Duration) (m Manager[CTX]) {
+	m = Manager[CTX]{
 		M: map[string]*Control[CTX]{},
 		D: sql.Sqlite{DBPath: dbpath},
 		B: ttl.NewCache[uintptr, bool](banmapttl),
 	}
+	err := m.D.Open(time.Hour * 24)
+	if err != nil {
+		panic(err)
+	}
+	return
 }
 
 // Control is to control the plugins.
@@ -57,11 +62,7 @@ func (manager *Manager[CTX]) NewControl(service string, o *Options[CTX]) *Contro
 	manager.Lock()
 	defer manager.Unlock()
 	manager.M[service] = m
-	err := manager.D.Open(time.Hour * 24)
-	if err != nil {
-		panic(err)
-	}
-	err = manager.D.Create(service, &c)
+	err := manager.D.Create(service, &c)
 	if err != nil {
 		panic(err)
 	}
