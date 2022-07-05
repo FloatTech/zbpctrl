@@ -62,3 +62,17 @@ func (manager *Manager[CTX]) GetExtra(gid int64, obj any) error {
 	}
 	return errors.New("respCache error")
 }
+
+func (manager *Manager[CTX]) SetExtra(gid int64, obj any) error {
+	if !manager.CanResponse(gid) {
+		return errors.New("there is no extra data for a silent group")
+	}
+	data, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+	manager.Lock()
+	defer manager.Unlock()
+	respCache[gid] = helper.BytesToString(data)
+	return manager.D.Insert("__resp", &ResponseGroup{GroupID: gid, Extra: helper.BytesToString(data)})
+}
