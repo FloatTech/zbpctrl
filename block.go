@@ -4,7 +4,7 @@ import (
 	"strconv"
 )
 
-func (manager *Manager[CTX]) InitBlock() error {
+func (manager *Manager[CTX]) initBlock() error {
 	return manager.D.Create("__block", &BlockStatus{})
 }
 

@@ -6,14 +6,22 @@ type GroupConfig struct {
 	Disable int64 `db:"disable"` // Disable 默认启用该插件
 }
 
+// BanStatus 在某群封禁某人的状态
 type BanStatus struct {
 	ID      int64 `db:"id"`
 	UserID  int64 `db:"uid"`
 	GroupID int64 `db:"gid"`
 }
 
+// BlockStatus 全局 ban 某人
 type BlockStatus struct {
 	UserID int64 `db:"uid"`
+}
+
+// ResponseGroup 响应的群
+type ResponseGroup struct {
+	GroupID int64  `db:"gid"` // GroupID 群号, 个人为负
+	Extra   string `db:"ext"` // Extra 该群的扩展数据
 }
 
 // Options holds the optional parameters for the Manager.
