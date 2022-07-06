@@ -2,6 +2,8 @@
 package control
 
 import (
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -18,6 +20,24 @@ type Manager[CTX any] struct {
 }
 
 func NewManager[CTX any](dbpath string, banmapttl time.Duration) (m Manager[CTX]) {
+	switch {
+	case dbpath == "":
+		dbpath = "ctrl.db"
+	case strings.HasSuffix(dbpath, "/"):
+		err := os.MkdirAll(dbpath, 0755)
+		if err != nil {
+			panic(err)
+		}
+		dbpath += "ctrl.db"
+	default:
+		i := strings.LastIndex(dbpath, "/")
+		if i > 0 {
+			err := os.MkdirAll(dbpath[:i], 0755)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
 	m = Manager[CTX]{
 		M: map[string]*Control[CTX]{},
 		D: sql.Sqlite{DBPath: dbpath},
