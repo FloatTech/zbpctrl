@@ -45,7 +45,7 @@ func (manager *Manager[CTX]) CanResponse(gid int64) bool {
 	manager.Lock()
 	defer manager.Unlock()
 	var rsp ResponseGroup
-	err := manager.D.Find("__resp", &rsp, "where uid = "+strconv.FormatInt(gid, 10))
+	err := manager.D.Find("__resp", &rsp, "where gid = "+strconv.FormatInt(gid, 10))
 	if err != nil {
 		respCache[gid] = "-"
 		return false
