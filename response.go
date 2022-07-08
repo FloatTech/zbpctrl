@@ -37,7 +37,13 @@ func (manager *Manager[CTX]) Silence(gid int64) error {
 // CanResponse ...
 func (manager *Manager[CTX]) CanResponse(gid int64) bool {
 	manager.RLock()
-	ext, ok := respCache[gid]
+	ext, ok := respCache[0] // all status
+	manager.RUnlock()
+	if ok && ext != "-" {
+		return true
+	}
+	manager.RLock()
+	ext, ok = respCache[gid]
 	manager.RUnlock()
 	if ok {
 		return ext != "-"
@@ -45,7 +51,12 @@ func (manager *Manager[CTX]) CanResponse(gid int64) bool {
 	manager.Lock()
 	defer manager.Unlock()
 	var rsp ResponseGroup
-	err := manager.D.Find("__resp", &rsp, "where gid = "+strconv.FormatInt(gid, 10))
+	err := manager.D.Find("__resp", &rsp, "where gid = 0") // all status
+	if err == nil && rsp.Extra != "-" {
+		respCache[0] = rsp.Extra
+		return true
+	}
+	err = manager.D.Find("__resp", &rsp, "where gid = "+strconv.FormatInt(gid, 10))
 	if err != nil {
 		respCache[gid] = "-"
 		return false
