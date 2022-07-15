@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wdvxdr1123/ZeroBot/extension/ttl"
-
 	sql "github.com/FloatTech/sqlite"
+
+	"github.com/FloatTech/ttl"
 )
 
 type Manager[CTX any] struct {
