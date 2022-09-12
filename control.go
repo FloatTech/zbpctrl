@@ -175,12 +175,11 @@ func (m *Control[CTX]) Handler(ctx uintptr, gid, uid int64) bool {
 	if ok {
 		return m.IsEnabledIn(grp)
 	}
-	isnotbanned := !m.IsBannedIn(uid, grp)
-	if isnotbanned {
-		m.Manager.B.Set(ctx, true)
-		return m.IsEnabledIn(grp)
+	if m.IsBannedIn(uid, grp) {
+		return false
 	}
-	return false
+	m.Manager.B.Set(ctx, true)
+	return m.IsEnabledIn(grp)
 }
 
 // String 打印帮助
