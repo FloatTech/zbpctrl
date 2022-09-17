@@ -168,17 +168,9 @@ func (m *Control[CTX]) Handler(ctx uintptr, gid, uid int64) bool {
 		// 个人用户
 		grp = -uid
 	}
-	if !m.Manager.CanResponse(grp) {
+	if !m.Manager.CanResponse(grp) || m.IsBannedIn(uid, grp) {
 		return false
 	}
-	ok := m.Manager.B.Get(ctx)
-	if ok {
-		return m.IsEnabledIn(grp)
-	}
-	if m.IsBannedIn(uid, grp) {
-		return false
-	}
-	m.Manager.B.Set(ctx, true)
 	return m.IsEnabledIn(grp)
 }
 

@@ -8,18 +8,15 @@ import (
 	"time"
 
 	sql "github.com/FloatTech/sqlite"
-
-	"github.com/FloatTech/ttl"
 )
 
 type Manager[CTX any] struct {
 	sync.RWMutex
 	M map[string]*Control[CTX]
 	D sql.Sqlite
-	B *ttl.Cache[uintptr, bool]
 }
 
-func NewManager[CTX any](dbpath string, banmapttl time.Duration) (m Manager[CTX]) {
+func NewManager[CTX any](dbpath string) (m Manager[CTX]) {
 	switch {
 	case dbpath == "":
 		dbpath = "ctrl.db"
@@ -41,7 +38,6 @@ func NewManager[CTX any](dbpath string, banmapttl time.Duration) (m Manager[CTX]
 	m = Manager[CTX]{
 		M: map[string]*Control[CTX]{},
 		D: sql.Sqlite{DBPath: dbpath},
-		B: ttl.NewCache[uintptr, bool](banmapttl),
 	}
 	err := m.D.Open(time.Hour * 24)
 	if err != nil {

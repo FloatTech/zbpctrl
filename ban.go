@@ -10,15 +10,18 @@ import (
 	"github.com/wdvxdr1123/ZeroBot/utils/helper"
 )
 
+var banCache = make(map[[16]byte]struct{})
+
 // Ban 禁止某人在某群使用本插件
 func (m *Control[CTX]) Ban(uid, gid int64) {
 	var err error
 	var digest [16]byte
 	if gid != 0 { // 特定群
 		digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_%d", uid, gid)))
-		m.Manager.RLock()
+		m.Manager.Lock()
 		err = m.Manager.D.Insert(m.Service+"ban", &BanStatus{ID: int64(binary.LittleEndian.Uint64(digest[:8])), UserID: uid, GroupID: gid})
-		m.Manager.RUnlock()
+		banCache[digest] = struct{}{}
+		m.Manager.Unlock()
 		if err == nil {
 			log.Debugf("[control] plugin %s is banned in grp %d for usr %d.", m.Service, gid, uid)
 			return
@@ -26,9 +29,10 @@ func (m *Control[CTX]) Ban(uid, gid int64) {
 	}
 	// 所有群
 	digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_all", uid)))
-	m.Manager.RLock()
+	m.Manager.Lock()
 	err = m.Manager.D.Insert(m.Service+"ban", &BanStatus{ID: int64(binary.LittleEndian.Uint64(digest[:8])), UserID: uid, GroupID: 0})
-	m.Manager.RUnlock()
+	banCache[digest] = struct{}{}
+	m.Manager.Unlock()
 	if err == nil {
 		log.Debugf("[control] plugin %s is banned in all grp for usr %d.", m.Service, uid)
 	}
@@ -39,17 +43,19 @@ func (m *Control[CTX]) Permit(uid, gid int64) {
 	var digest [16]byte
 	if gid != 0 { // 特定群
 		digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_%d", uid, gid)))
-		m.Manager.RLock()
+		m.Manager.Lock()
 		_ = m.Manager.D.Del(m.Service+"ban", "WHERE id = "+strconv.FormatInt(int64(binary.LittleEndian.Uint64(digest[:8])), 10))
-		m.Manager.RUnlock()
+		delete(banCache, digest)
+		m.Manager.Unlock()
 		log.Debugf("[control] plugin %s is permitted in grp %d for usr %d.", m.Service, gid, uid)
 		return
 	}
 	// 所有群
 	digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_all", uid)))
-	m.Manager.RLock()
+	m.Manager.Lock()
 	_ = m.Manager.D.Del(m.Service+"ban", "WHERE id = "+strconv.FormatInt(int64(binary.LittleEndian.Uint64(digest[:8])), 10))
-	m.Manager.RUnlock()
+	delete(banCache, digest)
+	m.Manager.Unlock()
 	log.Debugf("[control] plugin %s is permitted in all grp for usr %d.", m.Service, uid)
 }
 
@@ -61,19 +67,33 @@ func (m *Control[CTX]) IsBannedIn(uid, gid int64) bool {
 	if gid != 0 {
 		digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_%d", uid, gid)))
 		m.Manager.RLock()
+		if _, ok := banCache[digest]; ok {
+			m.Manager.RUnlock()
+			return true
+		}
 		err = m.Manager.D.Find(m.Service+"ban", &b, "WHERE id = "+strconv.FormatInt(int64(binary.LittleEndian.Uint64(digest[:8])), 10))
 		m.Manager.RUnlock()
 		if err == nil && gid == b.GroupID && uid == b.UserID {
 			log.Debugf("[control] plugin %s is banned in grp %d for usr %d.", m.Service, b.GroupID, b.UserID)
+			m.Manager.Lock()
+			banCache[digest] = struct{}{}
+			m.Manager.Unlock()
 			return true
 		}
 	}
 	digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_all", uid)))
 	m.Manager.RLock()
+	if _, ok := banCache[digest]; ok {
+		m.Manager.RUnlock()
+		return true
+	}
 	err = m.Manager.D.Find(m.Service+"ban", &b, "WHERE id = "+strconv.FormatInt(int64(binary.LittleEndian.Uint64(digest[:8])), 10))
 	m.Manager.RUnlock()
 	if err == nil && b.GroupID == 0 && uid == b.UserID {
 		log.Debugf("[control] plugin %s is banned in all grp for usr %d.", m.Service, b.UserID)
+		m.Manager.Lock()
+		banCache[digest] = struct{}{}
+		m.Manager.Unlock()
 		return true
 	}
 	return false
