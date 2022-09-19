@@ -17,7 +17,7 @@ func (m *Control[CTX]) Ban(uid, gid int64) {
 	var err error
 	var digest [16]byte
 	if gid != 0 { // 特定群
-		digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_%d", uid, gid)))
+		digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("[%s]%d_%d", m.Service, uid, gid)))
 		id := binary.LittleEndian.Uint64(digest[:8])
 		m.Manager.Lock()
 		err = m.Manager.D.Insert(m.Service+"ban", &BanStatus{ID: int64(id), UserID: uid, GroupID: gid})
@@ -29,7 +29,7 @@ func (m *Control[CTX]) Ban(uid, gid int64) {
 		}
 	}
 	// 所有群
-	digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_all", uid)))
+	digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("[%s]%d_all", m.Service, uid)))
 	id := binary.LittleEndian.Uint64(digest[:8])
 	m.Manager.Lock()
 	err = m.Manager.D.Insert(m.Service+"ban", &BanStatus{ID: int64(id), UserID: uid, GroupID: 0})
@@ -44,7 +44,7 @@ func (m *Control[CTX]) Ban(uid, gid int64) {
 func (m *Control[CTX]) Permit(uid, gid int64) {
 	var digest [16]byte
 	if gid != 0 { // 特定群
-		digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_%d", uid, gid)))
+		digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("[%s]%d_%d", m.Service, uid, gid)))
 		id := binary.LittleEndian.Uint64(digest[:8])
 		m.Manager.Lock()
 		_ = m.Manager.D.Del(m.Service+"ban", "WHERE id = "+strconv.FormatInt(int64(binary.LittleEndian.Uint64(digest[:8])), 10))
@@ -54,7 +54,7 @@ func (m *Control[CTX]) Permit(uid, gid int64) {
 		return
 	}
 	// 所有群
-	digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_all", uid)))
+	digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("[%s]%d_all", m.Service, uid)))
 	id := binary.LittleEndian.Uint64(digest[:8])
 	m.Manager.Lock()
 	_ = m.Manager.D.Del(m.Service+"ban", "WHERE id = "+strconv.FormatInt(int64(binary.LittleEndian.Uint64(digest[:8])), 10))
@@ -69,7 +69,7 @@ func (m *Control[CTX]) IsBannedIn(uid, gid int64) bool {
 	var err error
 	var digest [16]byte
 	if gid != 0 {
-		digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_%d", uid, gid)))
+		digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("[%s]%d_%d", m.Service, uid, gid)))
 		id := binary.LittleEndian.Uint64(digest[:8])
 		m.Manager.RLock()
 		if _, ok := banCache[id]; ok {
@@ -86,7 +86,7 @@ func (m *Control[CTX]) IsBannedIn(uid, gid int64) bool {
 			return true
 		}
 	}
-	digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("%d_all", uid)))
+	digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("[%s]%d_all", m.Service, uid)))
 	id := binary.LittleEndian.Uint64(digest[:8])
 	m.Manager.RLock()
 	if _, ok := banCache[id]; ok {
