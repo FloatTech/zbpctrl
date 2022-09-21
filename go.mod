@@ -3,7 +3,7 @@ module github.com/FloatTech/zbpctrl
 go 1.18
 
 require (
-	github.com/FloatTech/sqlite v0.3.3
+	github.com/FloatTech/sqlite v0.4.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/wdvxdr1123/ZeroBot v1.5.2-0.20220917061201-be873b3fa0fb
 )
