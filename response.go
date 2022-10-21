@@ -42,6 +42,17 @@ func (manager *Manager[CTX]) CanResponse(gid int64) bool {
 	if ok && ext != "-" {
 		return true
 	}
+
+	/////////////////////////
+	// 判断私聊消息是否不需要检测
+	manager.RLock()
+	ext, ok = respCache[1] // private status
+	manager.RUnlock()
+	if ok && ext != "-" {
+		return true
+	}
+	/////////////////////////
+
 	manager.RLock()
 	ext, ok = respCache[gid]
 	manager.RUnlock()
