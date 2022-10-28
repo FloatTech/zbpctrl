@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/FloatTech/sqlite v0.5.0
 	github.com/sirupsen/logrus v1.9.0
-	github.com/wdvxdr1123/ZeroBot v1.5.2-0.20221028072211-37ad353ce4b2
+	github.com/wdvxdr1123/ZeroBot v1.5.2-0.20221028080942-99b126551f62
 )
 
 require (
