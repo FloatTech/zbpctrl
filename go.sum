@@ -24,8 +24,8 @@ github.com/sirupsen/logrus v1.9.0/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVs
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
-github.com/wdvxdr1123/ZeroBot v1.6.0 h1:RRDqRpDbB75TK9CCO63jfJkNBXvxmmhfXkdT0ZHdpmE=
-github.com/wdvxdr1123/ZeroBot v1.6.0/go.mod h1:shG/ruauisKaVcov4amrFJtkeDl7nl+Q00IXB2PqFsc=
+github.com/wdvxdr1123/ZeroBot v1.6.1 h1:fgtPFLCMyDIo9xMSltql13IGpdBZrUFh0ql3AJaA68Y=
+github.com/wdvxdr1123/ZeroBot v1.6.1/go.mod h1:shG/ruauisKaVcov4amrFJtkeDl7nl+Q00IXB2PqFsc=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
