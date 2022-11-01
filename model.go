@@ -27,7 +27,9 @@ type ResponseGroup struct {
 // Options holds the optional parameters for the Manager.
 type Options[CTX any] struct {
 	DisableOnDefault  bool
+	Brief             string    // 简介
 	Help              string    // 帮助文本信息
+	Banner            string    // 背景图路径, 可为 http 或 本地 路径
 	PrivateDataFolder string    // 全部小写的数据文件夹名, 不出现在 zbpdata
 	PublicDataFolder  string    // 驼峰的数据文件夹名, 出现在 zbpdata
 	OnEnable          func(CTX) // 启用插件后执行的命令, 为空则打印 “已启用服务: xxx”
