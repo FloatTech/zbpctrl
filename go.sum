@@ -20,8 +20,8 @@ github.com/sirupsen/logrus v1.9.0/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVs
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
-github.com/wdvxdr1123/ZeroBot v1.6.4 h1:Us7FFp+FncLQViEJa2SDNrWMlz+Dj3DKsaZLLb9YWfw=
-github.com/wdvxdr1123/ZeroBot v1.6.4/go.mod h1:T5kD5vLi/YxL/fyDOCOaawi96LRBdJjcXh2CIjDyFfg=
+github.com/wdvxdr1123/ZeroBot v1.6.5 h1:w2dwDnMqYpwVAO3DPESznavAJ5T2jrqgU46owd3PFi4=
+github.com/wdvxdr1123/ZeroBot v1.6.5/go.mod h1:T5kD5vLi/YxL/fyDOCOaawi96LRBdJjcXh2CIjDyFfg=
 golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab h1:2QkjZIsXupsJbJIdSjjUOgWK3aEtzyuh2mPt3l/CkeU=
 golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
