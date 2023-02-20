@@ -35,3 +35,10 @@ type Options[CTX any] struct {
 	OnEnable          func(CTX) // 启用插件后执行的命令, 为空则打印 “已启用服务: xxx”
 	OnDisable         func(CTX) // 禁用插件后执行的命令, 为空则打印 “已禁用服务: xxx”
 }
+
+// User webui用户数据
+type User struct {
+	ID       int64  `db:"id"`
+	Username string `db:"username"`
+	Password string `db:"password"`
+}

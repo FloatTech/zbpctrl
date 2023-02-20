@@ -51,6 +51,10 @@ func NewManager[CTX any](dbpath string) (m Manager[CTX]) {
 	if err != nil {
 		panic(err)
 	}
+	err = m.initUser()
+	if err != nil {
+		panic(err)
+	}
 	return
 }
 
