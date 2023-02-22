@@ -28,7 +28,7 @@ func (manager *Manager[CTX]) CanFindUser(u User) (canFind bool, err error) {
 	manager.RLock()
 	defer manager.RUnlock()
 	var fu User
-	err = manager.D.Find("__user", &fu, "WHERE username = "+u.Username+"AND password = "+u.Password)
+	err = manager.D.Find("__user", &fu, "WHERE username = '"+u.Username+"' AND password = '"+u.Password+"'")
 	canFind = err == nil && fu.Username == u.Username
 	return
 }
