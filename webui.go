@@ -23,12 +23,10 @@ func (manager *Manager[CTX]) CreateOrUpdateUser(u User) error {
 	return manager.D.Insert("__user", &u)
 }
 
-// CanFindUser 查找用户
-func (manager *Manager[CTX]) CanFindUser(u User) (canFind bool, err error) {
+// FindUser 查找用户
+func (manager *Manager[CTX]) FindUser(u User) (fu User, err error) {
 	manager.RLock()
 	defer manager.RUnlock()
-	var fu User
 	err = manager.D.Find("__user", &fu, "WHERE username = '"+u.Username+"' AND password = '"+u.Password+"'")
-	canFind = err == nil && fu.Username == u.Username
 	return
 }
