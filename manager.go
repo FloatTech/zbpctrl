@@ -10,12 +10,14 @@ import (
 	sql "github.com/FloatTech/sqlite"
 )
 
+// Manager 数据库管理
 type Manager[CTX any] struct {
 	sync.RWMutex
 	M map[string]*Control[CTX]
 	D sql.Sqlite
 }
 
+// NewManager 新建数据库管理
 func NewManager[CTX any](dbpath string) (m Manager[CTX]) {
 	switch {
 	case dbpath == "":
