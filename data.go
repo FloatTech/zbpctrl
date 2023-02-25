@@ -50,6 +50,7 @@ func (m *Control[CTX]) SetData(groupID int64, data int64) error {
 	return err
 }
 
+// GetExtra 取得额外数据
 func (manager *Manager[CTX]) GetExtra(gid int64, obj any) error {
 	if !manager.CanResponse(gid) {
 		return errors.New("there is no extra data for a silent group")
@@ -63,6 +64,7 @@ func (manager *Manager[CTX]) GetExtra(gid int64, obj any) error {
 	return errors.New("respCache error")
 }
 
+// SetExtra 设置额外数据
 func (manager *Manager[CTX]) SetExtra(gid int64, obj any) error {
 	if !manager.CanResponse(gid) {
 		return errors.New("there is no extra data for a silent group")

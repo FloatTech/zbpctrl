@@ -18,9 +18,10 @@ func (manager *Manager[CTX]) Response(gid int64) error {
 		return errors.New("group " + strconv.FormatInt(gid, 10) + " already in response")
 	}
 	manager.Lock()
-	defer manager.Unlock()
 	respCache[gid] = ""
-	return manager.D.Insert("__resp", &ResponseGroup{GroupID: gid})
+	err := manager.D.Insert("__resp", &ResponseGroup{GroupID: gid})
+	manager.Unlock()
+	return err
 }
 
 // Silence will drop its extra data
@@ -29,9 +30,10 @@ func (manager *Manager[CTX]) Silence(gid int64) error {
 		return errors.New("group " + strconv.FormatInt(gid, 10) + " already in silence")
 	}
 	manager.Lock()
-	defer manager.Unlock()
 	respCache[gid] = "-"
-	return manager.D.Del("__resp", "where gid = "+strconv.FormatInt(gid, 10))
+	err := manager.D.Del("__resp", "where gid = "+strconv.FormatInt(gid, 10))
+	manager.Unlock()
+	return err
 }
 
 // CanResponse ...
@@ -48,19 +50,27 @@ func (manager *Manager[CTX]) CanResponse(gid int64) bool {
 	if ok {
 		return ext != "-"
 	}
-	manager.Lock()
-	defer manager.Unlock()
+	manager.RLock()
 	var rsp ResponseGroup
 	err := manager.D.Find("__resp", &rsp, "where gid = 0") // all status
+	manager.RUnlock()
 	if err == nil && rsp.Extra != "-" {
+		manager.Lock()
 		respCache[0] = rsp.Extra
+		manager.Unlock()
 		return true
 	}
+	manager.RLock()
 	err = manager.D.Find("__resp", &rsp, "where gid = "+strconv.FormatInt(gid, 10))
+	manager.RUnlock()
 	if err != nil {
+		manager.Lock()
 		respCache[gid] = "-"
+		manager.Unlock()
 		return false
 	}
+	manager.Lock()
 	respCache[gid] = rsp.Extra
+	manager.Unlock()
 	return rsp.Extra != "-"
 }

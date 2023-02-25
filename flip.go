@@ -18,7 +18,7 @@ func (m *Control[CTX]) Flip() error {
 	}
 	x := bits.RotateLeft64(uint64(c.Disable), 1) &^ 1
 	c.Disable = int64(bits.RotateLeft64(x, -1))
-	log.Debugf("[control] flip plugin %s of all : %d", m.Service, c.GroupID, x&1)
+	log.Debugf("[control] flip plugin %s of all : %d %v", m.Service, c.GroupID, x&1)
 	err = m.Manager.D.Insert(m.Service, &c)
 	if err != nil {
 		log.Errorf("[control] %v", err)

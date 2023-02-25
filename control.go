@@ -15,7 +15,7 @@ type Control[CTX any] struct {
 	Manager *Manager[CTX]
 }
 
-// newctrl returns Manager with settings.
+// NewControl returns Manager with settings.
 func (manager *Manager[CTX]) NewControl(service string, o *Options[CTX]) *Control[CTX] {
 	var c GroupConfig
 	m := &Control[CTX]{
