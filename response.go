@@ -54,7 +54,7 @@ func (manager *Manager[CTX]) CanResponse(gid int64) bool {
 	var rsp ResponseGroup
 	err := manager.D.Find("__resp", &rsp, "where gid = 0") // all status
 	manager.RUnlock()
-	if err == nil && rsp.Extra != "-" {
+	if err == nil && rsp.Extra != "" {
 		manager.Lock()
 		respCache[0] = rsp.Extra
 		manager.Unlock()
