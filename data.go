@@ -10,6 +10,11 @@ import (
 	"github.com/wdvxdr1123/ZeroBot/utils/helper"
 )
 
+var (
+	// ErrEmptyExtra ...
+	ErrEmptyExtra = errors.New("empty extra")
+)
+
 // GetData 获取某个群的 62 位配置信息
 func (m *Control[CTX]) GetData(gid int64) int64 {
 	var c GroupConfig
@@ -56,12 +61,28 @@ func (manager *Manager[CTX]) GetExtra(gid int64, obj any) error {
 		return errors.New("there is no extra data for a silent group")
 	}
 	manager.RLock()
-	defer manager.RUnlock()
 	ext, ok := respCache[gid]
+	manager.RUnlock()
 	if ok {
+		if ext == "-" {
+			return ErrEmptyExtra
+		}
 		return json.Unmarshal(helper.StringToBytes(ext), obj)
 	}
-	return errors.New("respCache error")
+	var rsp ResponseGroup
+	manager.RLock()
+	err := manager.D.Find("__resp", &rsp, "where gid = "+strconv.FormatInt(gid, 10))
+	manager.RUnlock()
+	if err != nil || rsp.Extra == "-" {
+		manager.Lock()
+		respCache[gid] = "-"
+		manager.Unlock()
+		return ErrEmptyExtra
+	}
+	manager.Lock()
+	respCache[gid] = rsp.Extra
+	manager.Unlock()
+	return json.Unmarshal(helper.StringToBytes(rsp.Extra), obj)
 }
 
 // SetExtra 设置额外数据
