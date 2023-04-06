@@ -159,7 +159,7 @@ func (m *Control[CTX]) IsEnabledIn(gid int64) bool {
 }
 
 // Handler 返回 预处理器
-func (m *Control[CTX]) Handler(ctx uintptr, gid, uid int64) bool {
+func (m *Control[CTX]) Handler(gid, uid int64) bool {
 	if m.Manager.IsBlocked(uid) {
 		return false
 	}
