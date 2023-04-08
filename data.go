@@ -13,6 +13,8 @@ import (
 var (
 	// ErrEmptyExtra ...
 	ErrEmptyExtra = errors.New("empty extra")
+	// ErrUnregisteredExtra ...
+	ErrUnregisteredExtra = errors.New("unregistered extra")
 )
 
 // GetData 获取某个群的 62 位配置信息
@@ -55,8 +57,16 @@ func (m *Control[CTX]) SetData(groupID int64, data int64) error {
 	return err
 }
 
-// GetExtra 取得额外数据
-func (manager *Manager[CTX]) GetExtra(gid int64, obj any) error {
+// GetExtra 取得额外数据, 一个插件一个
+func (m *Control[CTX]) GetExtra(obj any) error {
+	if m.Options.Extra == 0 {
+		return ErrUnregisteredExtra
+	}
+	return m.Manager.getExtra(int64(m.Options.Extra), obj)
+}
+
+// getExtra 取得额外数据
+func (manager *Manager[CTX]) getExtra(gid int64, obj any) error {
 	if !manager.CanResponse(gid) {
 		return errors.New("there is no extra data for a silent group")
 	}
@@ -85,8 +95,17 @@ func (manager *Manager[CTX]) GetExtra(gid int64, obj any) error {
 	return json.Unmarshal(helper.StringToBytes(rsp.Extra), obj)
 }
 
-// SetExtra 设置额外数据
-func (manager *Manager[CTX]) SetExtra(gid int64, obj any) error {
+// SetExtra 设置额外数据, 一个插件一个
+func (m *Control[CTX]) SetExtra(obj any) error {
+	if m.Options.Extra == 0 {
+		return ErrUnregisteredExtra
+	}
+	_ = m.Manager.Response(int64(m.Options.Extra))
+	return m.Manager.setExtra(int64(m.Options.Extra), obj)
+}
+
+// setExtra 设置额外数据
+func (manager *Manager[CTX]) setExtra(gid int64, obj any) error {
 	if !manager.CanResponse(gid) {
 		return errors.New("there is no extra data for a silent group")
 	}

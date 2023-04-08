@@ -27,6 +27,7 @@ type ResponseGroup struct {
 // Options holds the optional parameters for the Manager.
 type Options[CTX any] struct {
 	DisableOnDefault  bool
+	Extra             int16     // 插件申请的 Extra 记录号, 可为 -32768~32767, 0 不可用
 	Brief             string    // 简介
 	Help              string    // 帮助文本信息
 	Banner            string    // 背景图路径, 可为 http 或 本地 路径
