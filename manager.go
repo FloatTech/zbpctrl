@@ -41,7 +41,7 @@ func NewManager[CTX any](dbpath string) (m Manager[CTX]) {
 		M: map[string]*Control[CTX]{},
 		D: sql.Sqlite{DBPath: dbpath},
 	}
-	err := m.D.Open(time.Hour * 24)
+	err := m.D.Open(time.Hour)
 	if err != nil {
 		panic(err)
 	}
