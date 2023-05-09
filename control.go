@@ -118,17 +118,17 @@ func (m *Control[CTX]) IsEnabledIn(gid int64) bool {
 		err = m.Manager.D.Find(m.Service, &c, "WHERE gid=0")
 		m.Manager.RUnlock()
 		if err == nil && c.GroupID == 0 {
-			log.Debugf("[control] plugin %s of all : %d", m.Service, c.Disable&1)
 			yes = c.Disable&1 == 0
-			ok = true
-			m.Manager.Lock()
-			m.Cache[0] = yes
-			m.Manager.Unlock()
-			log.Debugf("[control] cache plugin %s of grp %d : %v", m.Service, gid, yes)
+		} else {
+			yes = true
 		}
+		m.Manager.Lock()
+		m.Cache[0] = yes
+		m.Manager.Unlock()
+		log.Debugf("[control] cache plugin %s of all : %v", m.Service, yes)
 	}
 
-	if ok && yes == m.Options.DisableOnDefault { // global enable status is different from default value
+	if yes == m.Options.DisableOnDefault { // global enable status is different from default value
 		return yes
 	}
 
@@ -155,6 +155,10 @@ func (m *Control[CTX]) IsEnabledIn(gid int64) bool {
 	if ok {
 		return yes
 	}
+	m.Manager.Lock()
+	m.Cache[gid] = !m.Options.DisableOnDefault
+	m.Manager.Unlock()
+	log.Debugf("[control] cache plugin %s of grp %d (default) : %v", m.Service, gid, !m.Options.DisableOnDefault)
 	return !m.Options.DisableOnDefault
 }
 
