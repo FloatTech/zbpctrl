@@ -130,7 +130,7 @@ func (m *Control[CTX]) IsEnabledIn(gid int64) bool {
 		log.Debugf("[control] cache plugin %s of all : %v", m.Service, yes)
 	}
 
-	if (yes != nil) && (yes.isenable == m.Options.DisableOnDefault) { // global enable status is different from default value
+	if yes != nil {
 		return yes.isenable
 	}
 
