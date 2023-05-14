@@ -74,23 +74,20 @@ func (m *Control[CTX]) IsBannedIn(uid, gid int64) bool {
 		m.Manager.RLock()
 		if yes, ok := banCache[id]; ok {
 			m.Manager.RUnlock()
-			if yes {
-				return true
-			}
-		} else {
-			err = m.Manager.D.Find(m.Service+"ban", &b, "WHERE id = "+strconv.FormatInt(int64(id), 10))
-			m.Manager.RUnlock()
-			if err == nil && gid == b.GroupID && uid == b.UserID {
-				log.Debugf("[control] plugin %s is banned in grp %d for usr %d.", m.Service, b.GroupID, b.UserID)
-				m.Manager.Lock()
-				banCache[id] = true
-				m.Manager.Unlock()
-				return true
-			}
-			m.Manager.Lock()
-			banCache[id] = false
-			m.Manager.Unlock()
+			return yes
 		}
+		err = m.Manager.D.Find(m.Service+"ban", &b, "WHERE id = "+strconv.FormatInt(int64(id), 10))
+		m.Manager.RUnlock()
+		if err == nil && gid == b.GroupID && uid == b.UserID {
+			log.Debugf("[control] plugin %s is banned in grp %d for usr %d.", m.Service, b.GroupID, b.UserID)
+			m.Manager.Lock()
+			banCache[id] = true
+			m.Manager.Unlock()
+			return true
+		}
+		m.Manager.Lock()
+		banCache[id] = false
+		m.Manager.Unlock()
 	}
 	digest = md5.Sum(helper.StringToBytes(fmt.Sprintf("[%s]%d_all", m.Service, uid)))
 	id := binary.LittleEndian.Uint64(digest[:8])

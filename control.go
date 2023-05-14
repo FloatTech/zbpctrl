@@ -10,7 +10,7 @@ import (
 // Control is to control the plugins.
 type Control[CTX any] struct {
 	Service string
-	Cache   map[int64]bool
+	Cache   map[int64]uint8 // map[gid]isdisable
 	Options Options[CTX]
 	Manager *Manager[CTX]
 }
@@ -20,7 +20,7 @@ func (manager *Manager[CTX]) NewControl(service string, o *Options[CTX]) *Contro
 	var c GroupConfig
 	m := &Control[CTX]{
 		Service: service,
-		Cache:   make(map[int64]bool, 16),
+		Cache:   make(map[int64]uint8, 16),
 		Options: func() Options[CTX] {
 			if o == nil {
 				return Options[CTX]{}
@@ -61,7 +61,7 @@ func (m *Control[CTX]) Enable(groupID int64) {
 	}
 	c.Disable = int64(uint64(c.Disable) & 0xffffffff_fffffffe)
 	m.Manager.Lock()
-	m.Cache[groupID] = true
+	m.Cache[groupID] = 0
 	err = m.Manager.D.Insert(m.Service, &c)
 	m.Manager.Unlock()
 	if err != nil {
@@ -81,7 +81,7 @@ func (m *Control[CTX]) Disable(groupID int64) {
 	}
 	c.Disable |= 1
 	m.Manager.Lock()
-	m.Cache[groupID] = false
+	m.Cache[groupID] = 1
 	err = m.Manager.D.Insert(m.Service, &c)
 	m.Manager.Unlock()
 	if err != nil {
@@ -94,7 +94,11 @@ func (m *Control[CTX]) Disable(groupID int64) {
 func (m *Control[CTX]) Reset(groupID int64) {
 	if groupID != 0 {
 		m.Manager.Lock()
-		delete(m.Cache, groupID)
+		if m.Options.DisableOnDefault {
+			m.Cache[groupID] = 1
+		} else {
+			m.Cache[groupID] = 0
+		}
 		err := m.Manager.D.Del(m.Service, "WHERE gid="+strconv.FormatInt(groupID, 10))
 		m.Manager.Unlock()
 		if err != nil {
@@ -109,57 +113,71 @@ func (m *Control[CTX]) Reset(groupID int64) {
 func (m *Control[CTX]) IsEnabledIn(gid int64) bool {
 	var c GroupConfig
 	var err error
-
 	m.Manager.RLock()
-	yes, ok := m.Cache[0]
+	isdisable, ok := m.Cache[0]
 	m.Manager.RUnlock()
 	if !ok {
 		m.Manager.RLock()
 		err = m.Manager.D.Find(m.Service, &c, "WHERE gid=0")
 		m.Manager.RUnlock()
-		if err == nil && c.GroupID == 0 {
-			yes = c.Disable&1 == 0
-		} else {
-			yes = true
-		}
 		m.Manager.Lock()
-		m.Cache[0] = yes
+		if err == nil && c.GroupID == 0 {
+			if c.Disable&1 == 0 {
+				isdisable = 0
+			} else {
+				isdisable = 1
+			}
+		} else {
+			isdisable = 2
+		}
+		m.Cache[0] = isdisable
+		ok = true
 		m.Manager.Unlock()
-		log.Debugf("[control] cache plugin %s of all : %v", m.Service, yes)
+		log.Debugf("[control] cache plugin %s of all : %v", m.Service, isdisable)
 	}
 
-	if yes == m.Options.DisableOnDefault { // global enable status is different from default value
-		return yes
+	if isdisable != 2 && ok {
+		return isdisable == 0
 	}
 
 	m.Manager.RLock()
-	yes, ok = m.Cache[gid]
+	isdisable, ok = m.Cache[gid]
 	m.Manager.RUnlock()
 	if ok {
-		log.Debugf("[control] read cached %s of grp %d : %v", m.Service, gid, yes)
+		log.Debugf("[control] read cached %s of grp %d : %v", m.Service, gid, isdisable)
 	} else {
 		m.Manager.RLock()
 		err = m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(gid, 10))
 		m.Manager.RUnlock()
 		if err == nil && gid == c.GroupID {
-			log.Debugf("[control] plugin %s of grp %d : %d", m.Service, c.GroupID, c.Disable&1)
-			yes = c.Disable&1 == 0
-			ok = true
 			m.Manager.Lock()
-			m.Cache[gid] = yes
+			if c.Disable&1 == 0 {
+				isdisable = 0
+			} else {
+				isdisable = 1
+			}
+			m.Cache[gid] = isdisable
+			ok = true
 			m.Manager.Unlock()
-			log.Debugf("[control] cache plugin %s of grp %d : %v", m.Service, gid, yes)
+			log.Debugf("[control] cache plugin %s of grp %d : %v", m.Service, gid, isdisable)
 		}
 	}
 
 	if ok {
-		return yes
+		return isdisable == 0
 	}
+
 	m.Manager.Lock()
-	m.Cache[gid] = !m.Options.DisableOnDefault
+	if m.Options.DisableOnDefault {
+		isdisable = 1
+	} else {
+		isdisable = 0
+	}
+	m.Cache[gid] = isdisable
 	m.Manager.Unlock()
-	log.Debugf("[control] cache plugin %s of grp %d (default) : %v", m.Service, gid, !m.Options.DisableOnDefault)
-	return !m.Options.DisableOnDefault
+	log.Debugf("[control] cache plugin %s of grp %d (default) : %v", m.Service, gid, isdisable)
+
+	return isdisable == 0
 }
 
 // Handler 返回 预处理器
