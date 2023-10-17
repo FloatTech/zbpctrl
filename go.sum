@@ -1,5 +1,5 @@
-github.com/FloatTech/sqlite v1.6.2 h1:FytbExjpvYalZxxITtmSenHiPGLPUvlz47LY/P0SCCw=
-github.com/FloatTech/sqlite v1.6.2/go.mod h1:zFbHzRfB+CJ+VidfjuVbrcin3DAz283F7hF1hIeHzpY=
+github.com/FloatTech/sqlite v1.6.3 h1:MQkqBNlkPuCoKQQgoNLuTL/2Ci3tBTFAnVYBdD0Wy4M=
+github.com/FloatTech/sqlite v1.6.3/go.mod h1:zFbHzRfB+CJ+VidfjuVbrcin3DAz283F7hF1hIeHzpY=
 github.com/FloatTech/ttl v0.0.0-20220715042055-15612be72f5b h1:tvciXWq2nuvTbFeJGLDNIdRX3BI546D3O7k7vrVueZw=
 github.com/FloatTech/ttl v0.0.0-20220715042055-15612be72f5b/go.mod h1:fHZFWGquNXuHttu9dUYoKuNbm3dzLETnIOnm1muSfDs=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -15,13 +15,13 @@ github.com/mattn/go-isatty v0.0.16 h1:bq3VjFmv/sOjHtdEhmkEV4x1AJtvUvOJ2PFAZ5+peK
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/sirupsen/logrus v1.9.0 h1:trlNQbNUG3OdDrDil03MCb1H2o9nJ1x4/5LYw7byDE0=
-github.com/sirupsen/logrus v1.9.0/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
+github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ=
+github.com/sirupsen/logrus v1.9.3/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
-github.com/wdvxdr1123/ZeroBot v1.6.11 h1:44Wr6CsCtWlFensK5IhuVCWkosdRw0rA8SygVD8DgoI=
-github.com/wdvxdr1123/ZeroBot v1.6.11/go.mod h1:y29UIOy0RD3P+0meDNIWRhcJF3jtWPN9xP9hgt/AJAU=
+github.com/wdvxdr1123/ZeroBot v1.7.5-0.20231009162356-57f71b9f5258 h1:Q0dKoj9SHrR8WjjlcX+eyYBjQKqBn/x1pdJJO1IIOxQ=
+github.com/wdvxdr1123/ZeroBot v1.7.5-0.20231009162356-57f71b9f5258/go.mod h1:y29UIOy0RD3P+0meDNIWRhcJF3jtWPN9xP9hgt/AJAU=
 golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab h1:2QkjZIsXupsJbJIdSjjUOgWK3aEtzyuh2mPt3l/CkeU=
 golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
