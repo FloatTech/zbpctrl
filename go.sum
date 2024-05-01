@@ -20,8 +20,8 @@ github.com/sirupsen/logrus v1.9.3/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVs
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
-github.com/wdvxdr1123/ZeroBot v1.7.5-0.20231009162356-57f71b9f5258 h1:Q0dKoj9SHrR8WjjlcX+eyYBjQKqBn/x1pdJJO1IIOxQ=
-github.com/wdvxdr1123/ZeroBot v1.7.5-0.20231009162356-57f71b9f5258/go.mod h1:y29UIOy0RD3P+0meDNIWRhcJF3jtWPN9xP9hgt/AJAU=
+github.com/wdvxdr1123/ZeroBot v1.7.5-0.20240501122138-fdbe4e1d21b4 h1:9no48IDhvVzY9BjmSALMQfw/QiV9MFeT0vk069aTRdM=
+github.com/wdvxdr1123/ZeroBot v1.7.5-0.20240501122138-fdbe4e1d21b4/go.mod h1:J6uHaXS/Am2VsLxF9TcU6il19PbOeC4SvgxHJ1E2jaE=
 golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab h1:2QkjZIsXupsJbJIdSjjUOgWK3aEtzyuh2mPt3l/CkeU=
 golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
