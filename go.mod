@@ -1,11 +1,11 @@
 module github.com/FloatTech/zbpctrl
 
-go 1.19
+go 1.20
 
 require (
 	github.com/FloatTech/sqlite v1.6.3
 	github.com/sirupsen/logrus v1.9.3
-	github.com/wdvxdr1123/ZeroBot v1.7.5-0.20240501122138-fdbe4e1d21b4
+	github.com/wdvxdr1123/ZeroBot v1.7.5-0.20240501144516-eb574bbdad32
 )
 
 require (
