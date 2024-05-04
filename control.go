@@ -143,9 +143,7 @@ func (m *Control[CTX]) IsEnabledIn(gid int64) bool {
 	m.Manager.RLock()
 	isdisable, ok = m.Cache[gid]
 	m.Manager.RUnlock()
-	if ok {
-		log.Debugf("[control] read cached %s of grp %d : %v", m.Service, gid, isdisable)
-	} else {
+	if !ok {
 		m.Manager.RLock()
 		err = m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(gid, 10))
 		m.Manager.RUnlock()
