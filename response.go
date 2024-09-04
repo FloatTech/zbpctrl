@@ -3,8 +3,6 @@ package control
 import (
 	"errors"
 	"strconv"
-
-	sql "github.com/FloatTech/sqlite"
 )
 
 // InitResponse ...
@@ -52,7 +50,6 @@ func (manager *Manager[CTX]) CanResponse(gid int64) bool {
 	if ok {
 		return ext != "-"
 	}
-
 	var rsp ResponseGroup
 	manager.RLock()
 	err := manager.D.Find("__resp", &rsp, "where gid = 0") // all status
@@ -66,7 +63,7 @@ func (manager *Manager[CTX]) CanResponse(gid int64) bool {
 	manager.RLock()
 	err = manager.D.Find("__resp", &rsp, "where gid = "+strconv.FormatInt(gid, 10))
 	manager.RUnlock()
-	if err != nil && !errors.Is(err, sql.ErrNullResult) {
+	if err != nil {
 		manager.Lock()
 		respCache[gid] = "-"
 		manager.Unlock()
