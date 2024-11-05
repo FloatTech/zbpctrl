@@ -31,7 +31,7 @@ func (manager *Manager[CTX]) Silence(gid int64) error {
 	}
 	manager.Lock()
 	respCache[gid] = "-"
-	err := manager.D.Del("__resp", "where gid = "+strconv.FormatInt(gid, 10))
+	err := manager.D.Del("__resp", "where gid = ?", gid)
 	manager.Unlock()
 	return err
 }
@@ -61,7 +61,7 @@ func (manager *Manager[CTX]) CanResponse(gid int64) bool {
 		return true
 	}
 	manager.RLock()
-	err = manager.D.Find("__resp", &rsp, "where gid = "+strconv.FormatInt(gid, 10))
+	err = manager.D.Find("__resp", &rsp, "where gid = ?", gid)
 	manager.RUnlock()
 	if err != nil {
 		manager.Lock()

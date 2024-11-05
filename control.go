@@ -2,7 +2,6 @@ package control
 
 import (
 	"math/bits"
-	"strconv"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -54,7 +53,7 @@ func (manager *Manager[CTX]) NewControl(service string, o *Options[CTX]) *Contro
 func (m *Control[CTX]) Enable(groupID int64) {
 	var c GroupConfig
 	m.Manager.RLock()
-	err := m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(groupID, 10))
+	err := m.Manager.D.Find(m.Service, &c, "WHERE gid = ?", groupID)
 	m.Manager.RUnlock()
 	if err != nil {
 		c.GroupID = groupID
@@ -74,7 +73,7 @@ func (m *Control[CTX]) Enable(groupID int64) {
 func (m *Control[CTX]) Disable(groupID int64) {
 	var c GroupConfig
 	m.Manager.RLock()
-	err := m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(groupID, 10))
+	err := m.Manager.D.Find(m.Service, &c, "WHERE gid = ?", groupID)
 	m.Manager.RUnlock()
 	if err != nil {
 		c.GroupID = groupID
@@ -99,7 +98,7 @@ func (m *Control[CTX]) Reset(groupID int64) {
 		} else {
 			m.Cache[groupID] = 0
 		}
-		err := m.Manager.D.Del(m.Service, "WHERE gid="+strconv.FormatInt(groupID, 10))
+		err := m.Manager.D.Del(m.Service, "WHERE gid = ?", groupID)
 		m.Manager.Unlock()
 		if err != nil {
 			log.Errorf("[control] %v", err)
@@ -145,7 +144,7 @@ func (m *Control[CTX]) IsEnabledIn(gid int64) bool {
 	m.Manager.RUnlock()
 	if !ok {
 		m.Manager.RLock()
-		err = m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(gid, 10))
+		err = m.Manager.D.Find(m.Service, &c, "WHERE gid = ?", gid)
 		m.Manager.RUnlock()
 		if err == nil && gid == c.GroupID {
 			m.Manager.Lock()

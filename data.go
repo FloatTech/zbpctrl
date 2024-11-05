@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"math/bits"
-	"strconv"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/wdvxdr1123/ZeroBot/utils/helper"
@@ -22,7 +21,7 @@ func (m *Control[CTX]) GetData(gid int64) int64 {
 	var c GroupConfig
 	var err error
 	m.Manager.RLock()
-	err = m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(gid, 10))
+	err = m.Manager.D.Find(m.Service, &c, "WHERE gid = ?", gid)
 	m.Manager.RUnlock()
 	if err == nil && gid == c.GroupID {
 		log.Debugf("[control] plugin %s of grp %d : 0x%x", m.Service, c.GroupID, c.Disable>>1)
@@ -35,7 +34,7 @@ func (m *Control[CTX]) GetData(gid int64) int64 {
 func (m *Control[CTX]) SetData(groupID int64, data int64) error {
 	var c GroupConfig
 	m.Manager.RLock()
-	err := m.Manager.D.Find(m.Service, &c, "WHERE gid="+strconv.FormatInt(groupID, 10))
+	err := m.Manager.D.Find(m.Service, &c, "WHERE gid = ?", groupID)
 	m.Manager.RUnlock()
 	if err != nil {
 		c.GroupID = groupID
@@ -81,7 +80,7 @@ func (manager *Manager[CTX]) getExtra(gid int64, obj any) error {
 	}
 	var rsp ResponseGroup
 	manager.RLock()
-	err := manager.D.Find("__resp", &rsp, "where gid = "+strconv.FormatInt(gid, 10))
+	err := manager.D.Find("__resp", &rsp, "where gid = ?", gid)
 	manager.RUnlock()
 	if err != nil || rsp.Extra == "-" {
 		manager.Lock()

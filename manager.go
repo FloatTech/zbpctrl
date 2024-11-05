@@ -13,8 +13,10 @@ import (
 // Manager 管理
 type Manager[CTX any] struct {
 	sync.RWMutex
-	M map[string]*Control[CTX]
-	D sql.Sqlite
+	M          map[string]*Control[CTX]
+	D          sql.Sqlite
+	banCache   map[uint64]bool
+	blockCache map[int64]bool
 }
 
 // NewManager 打开管理数据库
@@ -38,8 +40,10 @@ func NewManager[CTX any](dbpath string) (m Manager[CTX]) {
 		}
 	}
 	m = Manager[CTX]{
-		M: map[string]*Control[CTX]{},
-		D: sql.Sqlite{DBPath: dbpath},
+		M:          map[string]*Control[CTX]{},
+		D:          sql.New(dbpath),
+		banCache:   make(map[uint64]bool, 8),
+		blockCache: make(map[int64]bool, 8),
 	}
 	err := m.D.Open(time.Hour)
 	if err != nil {
