@@ -42,10 +42,12 @@ func (m *Control[CTX]) SetData(groupID int64, data int64) error {
 			c.Disable = 1
 		}
 	}
+	// c.Disable: Fxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxD
 	x := bits.RotateLeft64(uint64(c.Disable), 1)
-	x &= 0x03
-	x |= uint64(data) << 2
-	c.Disable = int64(bits.RotateLeft64(x, -1))
+	// x        : xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxDF
+	x &= 0x02                                   // mask DF
+	x |= uint64(data) << 2                      // combine with data
+	c.Disable = int64(bits.RotateLeft64(x, -1)) // rotate back
 	log.Debugf("[control] set plugin %s of grp %d : 0x%x", m.Service, c.GroupID, data)
 	m.Manager.Lock()
 	err = m.Manager.D.Insert(m.Service, &c)
