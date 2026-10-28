@@ -108,12 +108,14 @@ func (m *Control[CTX]) Reset(groupID int64) {
 
 // IsEnabledIn 查询开启群
 // 当全局未配置或与默认相同时, 状态取决于单独配置, 后备为默认配置；
-// 当全局与默认不同时, 状态取决于全局配置, 单独配置失效。
 func (m *Control[CTX]) IsEnabledIn(gid int64) bool {
 	var c GroupConfig
 	var err error
+
+	// 全局配置：0=启用, 1=禁用, 2=未配置
+	var globalDisable uint8
 	m.Manager.RLock()
-	isdisable, ok := m.Cache[0]
+	globalDisable, ok := m.Cache[0]
 	m.Manager.RUnlock()
 	if !ok {
 		m.Manager.RLock()
@@ -122,25 +124,22 @@ func (m *Control[CTX]) IsEnabledIn(gid int64) bool {
 		m.Manager.Lock()
 		if err == nil && c.GroupID == 0 {
 			if c.Disable&1 == 0 {
-				isdisable = 0
+				globalDisable = 0
 			} else {
-				isdisable = 1
+				globalDisable = 1
 			}
 		} else {
-			isdisable = 2
+			globalDisable = 2
 		}
-		m.Cache[0] = isdisable
-		ok = true
+		m.Cache[0] = globalDisable
 		m.Manager.Unlock()
-		log.Debugf("[control] cache plugin %s of all : %v", m.Service, isdisable)
+		log.Debugf("[control] cache plugin %s of all : %v", m.Service, globalDisable)
 	}
 
-	if isdisable != 2 && ok {
-		return isdisable == 0
-	}
-
+	// 单独配置：0=启用, 1=禁用, 2=未配置
+	var groupDisable uint8
 	m.Manager.RLock()
-	isdisable, ok = m.Cache[gid]
+	groupDisable, ok = m.Cache[gid]
 	m.Manager.RUnlock()
 	if !ok {
 		m.Manager.RLock()
@@ -149,32 +148,35 @@ func (m *Control[CTX]) IsEnabledIn(gid int64) bool {
 		if err == nil && gid == c.GroupID {
 			m.Manager.Lock()
 			if c.Disable&1 == 0 {
-				isdisable = 0
+				groupDisable = 0
 			} else {
-				isdisable = 1
+				groupDisable = 1
 			}
-			m.Cache[gid] = isdisable
-			ok = true
+			m.Cache[gid] = groupDisable
 			m.Manager.Unlock()
-			log.Debugf("[control] cache plugin %s of grp %d : %v", m.Service, gid, isdisable)
+			log.Debugf("[control] cache plugin %s of grp %d : %v", m.Service, gid, groupDisable)
+		} else {
+			// 未配置单独配置，用默认值
+			m.Manager.Lock()
+			if m.Options.DisableOnDefault {
+				groupDisable = 1
+			} else {
+				groupDisable = 2
+			}
+			m.Cache[gid] = groupDisable
+			m.Manager.Unlock()
+			log.Debugf("[control] cache plugin %s of grp %d (default) : %v", m.Service, gid, groupDisable)
 		}
 	}
 
-	if ok {
-		return isdisable == 0
+	switch globalDisable {
+	case 0: // 如果全局启用单独配置是否为禁止(1)
+		return groupDisable != 1
+	case 1: // 如果全局禁止看单独配置是否为启用(0)
+		return groupDisable == 0
+	default:
+		return globalDisable != 1 && groupDisable != 1
 	}
-
-	m.Manager.Lock()
-	if m.Options.DisableOnDefault {
-		isdisable = 1
-	} else {
-		isdisable = 0
-	}
-	m.Cache[gid] = isdisable
-	m.Manager.Unlock()
-	log.Debugf("[control] cache plugin %s of grp %d (default) : %v", m.Service, gid, isdisable)
-
-	return isdisable == 0
 }
 
 // Handler 返回 预处理器
